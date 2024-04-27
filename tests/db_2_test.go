@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
+	_ "modernc.org/sqlite"
 )
 
 type Task struct {
@@ -24,12 +24,15 @@ func count(db *sqlx.DB) (int, error) {
 }
 
 func openDB(t *testing.T) *sqlx.DB {
+
 	dbfile := DBFile
 	envFile := os.Getenv("TODO_DBFILE")
 	if len(envFile) > 0 {
 		dbfile = envFile
+	} else {
+		dbfile = "scheduler.db"
 	}
-	db, err := sqlx.Connect("sqlite3", dbfile)
+	db, err := sqlx.Connect("sqlite", dbfile)
 	assert.NoError(t, err)
 	return db
 }
