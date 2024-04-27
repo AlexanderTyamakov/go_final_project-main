@@ -24,6 +24,8 @@ func TaskHandler(w http.ResponseWriter, r *http.Request) {
 		AddTask(w, r)
 	case http.MethodPut:
 		UpdateTask(w, r)
+	case http.MethodDelete:
+		DeleteTask(w, r)
 	default:
 		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
 	}
@@ -42,8 +44,6 @@ func DoneTaskHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		MarkTaskDone(w, r)
-	case http.MethodDelete:
-		DeleteTask(w, r)
 	default:
 		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
 	}
@@ -240,6 +240,13 @@ func MarkTaskDone(w http.ResponseWriter, r *http.Request) {
 		}
 
 		_, err = db.Exec("UPDATE scheduler SET date = ? WHERE id = ?", nextDate, id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		// If the task is not repeating, delete it from the database
+		_, err := db.Exec("DELETE FROM scheduler WHERE id = ?", id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
